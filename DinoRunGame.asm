@@ -1,3 +1,9 @@
+;Membros
+;Felipe Skubs Oliveira - 15451742
+;
+;
+;
+
 jmp main																									
 
 ;mensagem: string "";
