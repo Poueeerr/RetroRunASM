@@ -10,7 +10,7 @@ jmp main
 
 Letra: var #1
 
-boneco: string "-" ; Para desenhar o personagem 
+player: string "-" ; Para desenhar o personagem 
 obstaculo: string "o"	; Para desenhar o obstaculo 
 placar : string "SCORE: " ; String do placar
 
@@ -117,7 +117,7 @@ main:	; Inicio do codigo
 		loadn r7, #' '	; Parametro para saber se a tecla certa foi pressionada
 		loadn r6, #490	; Posicao do boneco na tela (fixa no eixo x e variavel no eixo y)
 		loadn r2, #519	; Posicao do obstaculo na tela (fixa no eixo x e variavel no eixo y)
-		load r4, boneco	; Guardando a string do boneco no registrador r4
+		load r4, player	; Guardando a string do boneco no registrador r4
 		load r1, obstaculo	; Guardando a string do obstaculo no registrador r1
 		loadn r5, #0	; Ciclo do pulo (0 = chao, entre 1 e 3 = sobe, maior que 3 = desce)
 		
@@ -125,7 +125,7 @@ main:	; Inicio do codigo
 	
 		LoopJogo:		; Loop principal do jogo
 		
-			call ChecaColisao	; Checa se houve uma colisao
+			call Collision	; Checa se houve uma colisao
 			
 			call AtPontos 		; Atualiza os pontos
 
@@ -882,7 +882,7 @@ ApagaPersonagem:
 ;********************************************************
 ;                ChecaColisao
 ;********************************************************
-ChecaColisao:
+Collision:
 	push r0
 	 
 	;;compara posicao inferior do personagem com a do obstaculo, se igual finaliza o jogo
@@ -1102,4 +1102,3 @@ tela5Linha26 : string "                                        "
 tela5Linha27 : string "                                        "
 tela5Linha28 : string "                                        "
 tela5Linha29 : string "                                        "
-
