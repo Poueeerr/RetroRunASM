@@ -14,7 +14,7 @@ player: string "-" ; Para desenhar o personagem
 obstaculo: string "o"	; Para desenhar o obstaculo 
 placar : string "SCORE: " ; String do placar
 
-posperso: var #490 ; Posicao padrao do personagem
+posperso: var #610 ; Posicao padrao do personagem
 pontos: var #1	; seta 1 para funcionar pontuacao
 
 delay1: var #1000	; Variaveis para usar como parametro para o delay
@@ -91,11 +91,7 @@ main:	; Inicio do codigo
 		
 		loadn r0, #80                ; delay pulo
 		store delay2, r0
-	
-	
-	
-			
-
+		
 	InicioJogo:		; Inicializa variaveis e registradores usados no jogo antes de comecar o loop principal
 		
 		
@@ -115,8 +111,8 @@ main:	; Inicio do codigo
 		call ImprimeStr
 		
 		loadn r7, #' '	; Parametro para saber se a tecla certa foi pressionada
-		loadn r6, #490	; Posicao do boneco na tela (fixa no eixo x e variavel no eixo y)
-		loadn r2, #519	; Posicao do obstaculo na tela (fixa no eixo x e variavel no eixo y)
+		loadn r6, #610	; Posicao do boneco na tela (fixa no eixo x e variavel no eixo y)
+		loadn r2, #639	; Posicao do obstaculo na tela (fixa no eixo x e variavel no eixo y)
 		load r4, player	; Guardando a string do boneco no registrador r4
 		load r1, obstaculo	; Guardando a string do obstaculo no registrador r1
 		loadn r5, #0	; Ciclo do pulo (0 = chao, entre 1 e 3 = sobe, maior que 3 = desce)
@@ -176,12 +172,12 @@ main:	; Inicio do codigo
 		
 		call ApagaTela
 	
-		pop r2
-		pop r1
-		pop r0
+		;pop r2
+		;pop r1
+		;pop r0
 
-		pop r0	; Da um Pop a mais para acertar o ponteiro da pilha, pois nao vai dar o RTS !!
-		jmp setamento	
+		;pop r0	; Da um Pop a mais para acertar o ponteiro da pilha, pois nao vai dar o RTS !!
+		jmp setamento
 		
 fim_de_jogo:
 	call ApagaTela
@@ -521,7 +517,7 @@ ResetaObstaculo:
 	push r1
 	push r3
 	
-	loadn r2, #519		; Posicao (padrao do obstaculo)
+	loadn r2, #639	; Posicao (padrao do obstaculo)
 	
 	call GeraPosicao	; Gera a nova  posicao para o obstaculo
 	
@@ -737,15 +733,15 @@ AtPontos:
 	push r5
 	push r6
 	
-	loadn r1, #490		; Caso o obstaculo tenha passado pela posicao do jogador, incrementa a pontuacao
+	loadn r1, #610		; Caso o obstaculo tenha passado pela posicao do jogador, incrementa a pontuacao
 	cmp r2, r1
 		ceq IncPontos
 	
-	loadn r1, #450		; Idem, porem para o caso do obstaculo estar em  outra linha
+	loadn r1, #570		; Idem, porem para o caso do obstaculo estar em  outra linha
 	cmp r2, r1
 		ceq IncPontos
 		
-	loadn r1, #410		; Idem, porem para o caso do obstaculo estar em  outra linha
+	loadn r1, #530		; Idem, porem para o caso do obstaculo estar em  outra linha
 	cmp r2, r1
 		ceq IncPontos
 		
