@@ -11,11 +11,11 @@ jmp main
 Letra: var #1
 
 player: string "-" ; Para desenhar o personagem 
-obstaculo: string "o"	; Para desenhar o obstaculo 
-placar : string "SCORE: " ; String do placar
+meteor: string "o"	; Para desenhar o meteor 
+scoreAtual : string "SCORE: " ; String do scoreAtual
 
-posperso: var #610 ; Posicao padrao do personagem
-pontos: var #1	; seta 1 para funcionar pontuacao
+posPlayer: var #610 ; Posicao padrao do personagem
+pontuacaoPlayer: var #1	; seta 1 para funcionar pontuacao
 
 delay1: var #1000	; Variaveis para usar como parametro para o delay
 delay2: var #1000
@@ -72,18 +72,18 @@ main:	; Inicio do codigo
 	
 	Loop_Inicio:
 		
-		call DigLetra 		; Le uma letra
+		call InputLetra 		; Le uma letra
 		
 		loadn r0, #' '		; Espera que a tecla 'space' seja digitada para iniciar o jogo
 		load r1, Letra
 		cmp r0, r1
 		jne Loop_Inicio
 	
-	setamento:
+	reset:
 		
 		push r2
-		loadn r2, #0				; Inicializa os pontos
-		store pontos, r2
+		loadn r2, #0				; Inicializa pontuacaoPlayer
+		store pontuacaoPlayer, r2
 		pop r2
 		
 		loadn r0, #1200
@@ -106,42 +106,42 @@ main:	; Inicio do codigo
 	
 	
 		loadn r0, #3
-		loadn r1, #placar		; Imprime a tela inicial
+		loadn r1, #scoreAtual		; Imprime a tela inicial
 		loadn r2, #0
 		call ImprimeStr
 		
 		loadn r7, #' '	; Parametro para saber se a tecla certa foi pressionada
 		loadn r6, #610	; Posicao do boneco na tela (fixa no eixo x e variavel no eixo y)
-		loadn r2, #639	; Posicao do obstaculo na tela (fixa no eixo x e variavel no eixo y)
+		loadn r2, #639	; Posicao do meteor na tela (fixa no eixo x e variavel no eixo y)
 		load r4, player	; Guardando a string do boneco no registrador r4
-		load r1, obstaculo	; Guardando a string do obstaculo no registrador r1
+		load r1, meteor	; Guardando a string do meteor no registrador r1
 		loadn r5, #0	; Ciclo do pulo (0 = chao, entre 1 e 3 = sobe, maior que 3 = desce)
 		
-		jmp LoopJogo
+		jmp GameLoop
 	
-		LoopJogo:		; Loop principal do jogo
+		GameLoop:		; Loop principal do jogo
 		
 			call Collision	; Checa se houve uma colisao
 			
-			call AtPontos 		; Atualiza os pontos
+			call AtpontuacaoPlayer 		; Atualiza os pontuacaoPlayer
 
 			call ApagaPersonagem 	; Desenha o personagem
 			call PrintaPersonagem
 			
-			call AtPosicaoObstaculo 	; Move o obstaculo
-			outchar r1, r2 				; Desenha o obstaculo
+			call AtPosicaometeor 	; Move o meteor
+			outchar r1, r2 				; Desenha o meteor
 			
-			call DelayChecaPulo		; Todo ciclo principal do jogo, a funcao DelayChecaPulo atrasa a execucao e le uma tecla do teclado (que e' 'w' ou nao)
-			call AtPosicaoBoneco	; Todo ciclo principal do jogo, a funcao AtPosicaoBoneco atualiza a posicao do boneco de acordo com a situacao
+			call DelayjumpPlayer		; Todo ciclo principal do jogo, a funcao DelayjumpPlayer atrasa a execucao e le uma tecla do teclado (que e' 'w' ou nao)
+			call AtPlayerPos	; Todo ciclo principal do jogo, a funcao AtPlayerPos atualiza a posicao do boneco de acordo com a situacao
 			
 			push r3 			; Checa se pode pular (caso o personagem esteja no chao)
 			loadn r3, #0 
 			cmp r5, r3
-				ceq ChecaPulo ; A funcao checa se o jogador mandou o personagem pular
+				ceq jumpPlayer ; A funcao checa se o jogador mandou o personagem pular
 			pop r3
 				
 			
-		jmp LoopJogo 	; Volta para o loop
+		jmp GameLoop 	; Volta para o loop
 	
 	
 	GameOver:
@@ -155,10 +155,10 @@ main:	; Inicio do codigo
 		loadn r2, #2304
 		call ImprimeTela2
 		
-		load r5, pontos
+		load r5, pontuacaoPlayer
 		loadn r6, #865	
 		call PrintaNumero
-		call DigLetra
+		call InputLetra
 		
 		;if Letra == ' '		; Espera que a tecla 's' seja digitada para reiniciar o jogo
 		loadn r0, #'n'
@@ -177,7 +177,7 @@ main:	; Inicio do codigo
 		;pop r0
 
 		;pop r0	; Da um Pop a mais para acertar o ponteiro da pilha, pois nao vai dar o RTS !!
-		jmp setamento
+		jmp reset
 		
 fim_de_jogo:
 	call ApagaTela
@@ -220,18 +220,18 @@ ImprimestrSai:
 	rts
 
 ;********************************************************
-;                  	     DigLetra
+;                  	     InputLetra
 ;********************************************************
 
-DigLetra:	; Espera que uma tecla seja digitada e salva na variavel global "Letra"
+InputLetra:	; Espera que uma tecla seja digitada e salva na variavel global "Letra"
 	push r0
 	push r1
 	loadn r1, #255	; Se nao digitar nada vem 255
 
-   DigLetra_Loop:
+   InputLetra_Loop:
 		inchar r0			; Le o teclado, se nada for digitado = 255
 		cmp r0, r1			;compara r0 com 255
-		jeq DigLetra_Loop	; Fica lendo ate' que digite uma tecla valida
+		jeq InputLetra_Loop	; Fica lendo ate' que digite uma tecla valida
 
 	store Letra, r0			; Salva a tecla na variavel global "Letra"
 
@@ -413,12 +413,12 @@ ImprimeStr:	;  Rotina de Impresao de Mensagens:    r0 = Posicao da tela que o pr
 	rts
 	
 ;********************************************************
-;                   AtPosicaoBoneco
+;                   AtPlayerPos
 ;********************************************************
 
 ;	Funcao que atualiza a posicao do boneco na tela de acordo com a necessidade da situacao
 
-AtPosicaoBoneco:
+AtPlayerPos:
 
 	push r0
 	
@@ -476,12 +476,12 @@ AtPosicaoBoneco:
 	rts
 	
 ;********************************************************
-;               ATUALIZA POSICAO DO OBSTACULO
+;               ATUALIZA POSICAO DO meteor
 ;********************************************************
 
-;	Funcao que atualiza a posicao do obstaculo na tela de acordo com a necessidade da situacao
+;	Funcao que atualiza a posicao do meteor na tela de acordo com a necessidade da situacao
 
-AtPosicaoObstaculo:
+AtPosicaometeor:
 	
 	push r0
 	loadn r0 , #' '
@@ -490,36 +490,36 @@ AtPosicaoObstaculo:
 	
 	dec r2
 
-	;if posicao do obstaculo = 480 (fim da tela para a esquerda)
+	;if posicao do meteor = 480 (fim da tela para a esquerda)
 	loadn r0, #480
 	cmp r2, r0
-		ceq ResetaObstaculo
+		ceq MeteorReset
 		
 	loadn r0, #440
 	cmp r2, r0
-		ceq ResetaObstaculo
+		ceq MeteorReset
 		
 	loadn r0, #400
 	cmp r2, r0
-		ceq ResetaObstaculo
+		ceq MeteorReset
 		
 	pop r0
 	rts
 
 ;********************************************************
-;                       ResetaObstaculo
+;                       MeteorReset
 ;********************************************************
 
-; Funcao que reseta a posicao do obstaculo
+; Funcao que reseta a posicao do meteor
 
-ResetaObstaculo:
+MeteorReset:
 	push r0
 	push r1
 	push r3
 	
-	loadn r2, #639	; Posicao (padrao do obstaculo)
+	loadn r2, #639	; Posicao (padrao do meteor)
 	
-	call GeraPosicao	; Gera a nova  posicao para o obstaculo
+	call GeraPosicao	; Gera a nova  posicao para o meteor
 	
 	loadn r1, #1		;  Caso 1
 	cmp r3,r1
@@ -539,7 +539,7 @@ ResetaObstaculo:
 ;                       GeraPosicao
 ;********************************************************
 
-; Funcao que gera uma posicao aleatoria para o obstaculo
+; Funcao que gera uma posicao aleatoria para o meteor
 
 GeraPosicao :
 	push r0
@@ -587,7 +587,7 @@ ResetaAleatorio:
 ;     				  AlteraPos1
 ;********************************************************
 
-; Caso 1 da posicao do obstaculo
+; Caso 1 da posicao do meteor
 
 AlteraPos1:
 		push r1
@@ -603,7 +603,7 @@ AlteraPos1:
 ;     				  AlteraPos2
 ;********************************************************
 
-; Caso 2 da posicao do obstaculo
+; Caso 2 da posicao do meteor
 
 AlteraPos2:
 		push r1
@@ -615,12 +615,12 @@ AlteraPos2:
 		rts
 
 ;********************************************************
-;                     ChecaPulo
+;                     jumpPlayer
 ;********************************************************	
 
 ; Funcao que checa se o jogador pressionou 'space' e, se sim, inicia o ciclo do pulo
 
-ChecaPulo:
+jumpPlayer:
 
 	push r3
 	load r3, Letra 			; Caso ' space' tenha sido pressionado	
@@ -692,17 +692,17 @@ Desce:
 	rts
 
 ;********************************************************
-;                       IncrementaPontos
+;                       IncrementapontuacaoPlayer
 ;********************************************************
 
-; Funcao que  incrementa os pontos do jogador
+; Funcao que  incrementa os pontuacaoPlayer do jogador
 
-IncPontos:
+IncpontuacaoPlayer:
 
 	push r1
 	push r2
 	
-	load r2, pontos
+	load r2, pontuacaoPlayer
 	
 	inc r2
 	
@@ -717,35 +717,35 @@ IncPontos:
 
 	store delay2, r1
 	
-	store pontos, r2
+	store pontuacaoPlayer, r2
 	
 	pop r2
 	pop r1
 	rts
 
 ;********************************************************
-;                AtualizaPontos
+;                AtualizapontuacaoPlayer
 ;********************************************************
 
-AtPontos:
+AtpontuacaoPlayer:
 
 	push r1
 	push r5
 	push r6
 	
-	loadn r1, #610		; Caso o obstaculo tenha passado pela posicao do jogador, incrementa a pontuacao
+	loadn r1, #610		; Caso o meteor tenha passado pela posicao do jogador, incrementa a pontuacao
 	cmp r2, r1
-		ceq IncPontos
+		ceq IncpontuacaoPlayer
 	
-	loadn r1, #570		; Idem, porem para o caso do obstaculo estar em  outra linha
+	loadn r1, #570		; Idem, porem para o caso do meteor estar em  outra linha
 	cmp r2, r1
-		ceq IncPontos
+		ceq IncpontuacaoPlayer
 		
-	loadn r1, #530		; Idem, porem para o caso do obstaculo estar em  outra linha
+	loadn r1, #530		; Idem, porem para o caso do meteor estar em  outra linha
 	cmp r2, r1
-		ceq IncPontos
+		ceq IncpontuacaoPlayer
 		
-	load r5, pontos
+	load r5, pontuacaoPlayer
 	
 	loadn r6, #11
 	
@@ -757,12 +757,12 @@ AtPontos:
 	rts	
 	
 ;********************************************************
-;                    DelayChecaPulo
+;                    DelayjumpPlayer
 ;********************************************************
  
 ; Funcao que da' o delay de um ciclo do jogo e tambem le uma tecla do teclado
 
-DelayChecaPulo:
+DelayjumpPlayer:
 	push r0
 	push r1
 	push r2
@@ -775,7 +775,7 @@ DelayChecaPulo:
 	loop_delay_1:
 		load r1, delay2
 
-; Bloco de ler o Teclado no meio do DelayChecaPulo!!		
+; Bloco de ler o Teclado no meio do DelayjumpPlayer!!		
 			loop_delay_2:
 				inchar r2
 				cmp r2, r3 
@@ -881,14 +881,14 @@ ApagaPersonagem:
 Collision:
 	push r0
 	 
-	;;compara posicao inferior do personagem com a do obstaculo, se igual finaliza o jogo
+	;;compara posicao inferior do personagem com a do meteor, se igual finaliza o jogo
 	cmp r2, r6 
 	jeq GameOver
 	
 	loadn r0,#40
 	sub r6,r6,r0
 	
-	;;compara posicao superior do personagem com a do obstaculo, se igual finaliza o jogo
+	;;compara posicao superior do personagem com a do meteor, se igual finaliza o jogo
 	cmp r2, r6
 	jeq GameOver
 	
