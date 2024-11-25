@@ -4,23 +4,18 @@
 ;
 ;
 
-jmp main																									
 
-;mensagem: string "";
+jmp main                                            ; Salta para a função principal
 
-Letra: var #1
+Letra: var #1                                        ; Variável para armazenar a entrada do jogador
 
-player: string "-" ; Para desenhar o personagem 
-meteor: string "o"	; Para desenhar o meteor 
-scoreAtual : string "SCORE: " ; String do scoreAtual
+scoreAtual : string "SCORE: "                        ; Texto inicial do placar
+meteor: string "o"                                   ; Representação gráfica do meteoro
+player: string "-"                                   ; Representação gráfica do personagem
+posPlayer: var #610                                  ; Posição inicial do personagem
+pontuacaoPlayer: var #1                              ; Inicializa o placar com 1
 
-posPlayer: var #610 ; Posicao padrao do personagem
-pontuacaoPlayer: var #1	; seta 1 para funcionar pontuacao
-
-delay1: var #1000	; Variaveis para usar como parametro para o delay
-delay2: var #1000
-
-Rand : var #30			; Tabela de nrs. Randomicos entre 1 - 3	
+Rand : var #30                                       ; Tabela de valores aleatórios entre 1 e 3
 	static Rand + #0, #3
 	static Rand + #1, #2
 	static Rand + #2, #2
@@ -53,279 +48,314 @@ Rand : var #30			; Tabela de nrs. Randomicos entre 1 - 3
 	static Rand + #28, #3
 	static Rand + #29, #2
 
+IncRand: var #1                                      ; Incrementador para números aleatórios
+delay1: var #1000                                    ; Variável para controlar o tempo entre meteoros
+delay2: var #1000                                    ; Variável para controlar o tempo do salto
+
+;======================================
+;				MAIN
+;======================================
+main:                                                ; Ponto de entrada principal do código
 	
-IncRand: var #1
-;
-; ----------x--------------x-----------
-main:	; Inicio do codigo	
-	
-	call ApagaTela
-	loadn r1, #tela0Linha0		; Imprime a tela inicial
-	loadn r2, #2816              ;cor 
+	call ApagaTela                                   ; Limpa a tela
+	loadn r1, #tela0Linha0                          ; Carrega o endereço da primeira tela inicial
+	loadn r2, #2816                                 ; Define a cor
 	call ImprimeTela
 	
-	loadn r1, #tela5Linha0		; Imprime a tela inicial
-	loadn r2, #2304             ;cor 
+	loadn r1, #tela5Linha0                          ; Carrega o endereço da segunda tela inicial
+	loadn r2, #2304                                 ; Define a cor
 	call ImprimeTela2
 	
-	jmp Loop_Inicio
-	
-	Loop_Inicio:
+	jmp Loop_Inicio                                 ; Salta para o início do loop
+
+Loop_Inicio:
 		
-		call InputLetra 		; Le uma letra
+		call InputLetra                             ; Aguarda entrada do jogador
 		
-		loadn r0, #' '		; Espera que a tecla 'space' seja digitada para iniciar o jogo
+		loadn r0, #' '                              ; Verifica se a tecla espaço foi pressionada para começar
 		load r1, Letra
 		cmp r0, r1
 		jne Loop_Inicio
 	
-	reset:
+reset:
 		
-		push r2
-		loadn r2, #0				; Inicializa pontuacaoPlayer
+		push r2                                     ; Salva o valor de r2 na pilha
+		loadn r2, #0                                ; Reseta o placar
 		store pontuacaoPlayer, r2
-		pop r2
+		pop r2                                      ; Restaura o valor de r2
 		
-		loadn r0, #1200
-		store delay1, R0             ; delay meteoro
+		loadn r0, #1200                             ; Configura o delay inicial dos meteoros
+		store delay1, R0 
 		
-		loadn r0, #80                ; delay pulo
+		loadn r0, #80                               ; Configura o delay inicial do salto
 		store delay2, r0
 		
-	InicioJogo:		; Inicializa variaveis e registradores usados no jogo antes de comecar o loop principal
+;======================================
+;		INICIO DO JOGO
+;======================================
+InicioJogo:                                         ; Define os valores iniciais antes do loop do jogo
 		
-		
-		call ApagaTela				;	Imprime a tela basica do jogo
-		loadn r1, #tela1Linha0
-		loadn r2, #1536
+		call ApagaTela                              ; Limpa a tela para o jogo
+		loadn r1, #tela1Linha0                      ; Carrega o endereço da tela de jogo
+		loadn r2, #1536                             ; Define a cor
 		call ImprimeTela
 		
-		loadn R1, #tela3Linha0	; Endereco onde comeca a primeira linha do cenario!!
-		loadn R2, #2816		    ;   cor 
-		call ImprimeTela2   		;  Rotina de Impresao de Cenario na Tela Inteira
+		loadn R1, #tela3Linha0                      ; Carrega o endereço inicial do cenário
+		loadn R2, #2816                             ; Define a cor
+		call ImprimeTela2                           ; Desenha o cenário na tela
 	
-	
-		loadn r0, #3
-		loadn r1, #scoreAtual		; Imprime a tela inicial
-		loadn r2, #0
+		loadn r0, #3                                ; Configuração inicial do placar
+		loadn r1, #scoreAtual                       ; Texto do placar
+		loadn r2, #0                                ; Inicializa o contador
 		call ImprimeStr
 		
-		loadn r7, #' '	; Parametro para saber se a tecla certa foi pressionada
-		loadn r6, #610	; Posicao do boneco na tela (fixa no eixo x e variavel no eixo y)
-		loadn r2, #639	; Posicao do meteor na tela (fixa no eixo x e variavel no eixo y)
-		load r4, player	; Guardando a string do boneco no registrador r4
-		load r1, meteor	; Guardando a string do meteor no registrador r1
-		loadn r5, #0	; Ciclo do pulo (0 = chao, entre 1 e 3 = sobe, maior que 3 = desce)
+		loadn r7, #' '                              ; Inicializa a tecla esperada
+		loadn r6, #610                              ; Configura a posição inicial do personagem
+		loadn r2, #639                              ; Configura a posição inicial do meteoro
+		load r4, player                             ; Armazena o desenho do personagem
+		load r1, meteor                             ; Armazena o desenho do meteoro
+		loadn r5, #0                                ; Define o ciclo do salto (chão, subir ou descer)
 		
-		jmp GameLoop
-	
-		GameLoop:		; Loop principal do jogo
-		
-			call Collision	; Checa se houve uma colisao
-			
-			call AtpontuacaoPlayer 		; Atualiza os pontuacaoPlayer
+		jmp GameLoop                                ; Inicia o loop principal do jogo
 
-			call ApagaPersonagem 	; Desenha o personagem
-			call PrintaPersonagem
+GameLoop:                                           ; Ciclo contínuo do jogo
+		
+			call Collision                         ; Verifica colisões
+			call AtpontuacaoPlayer                ; Atualiza o placar
+			call ApagaPersonagem                  ; Limpa a posição anterior do personagem
+			call PrintaPersonagem                 ; Desenha o personagem
+			call AtPosicaometeor                  ; Atualiza a posição do meteoro
+			outchar r1, r2                        ; Desenha o meteoro
+			call DelayjumpPlayer                  ; Gera um atraso e verifica entrada do jogador
+			call AtPlayerPos                      ; Atualiza a posição do personagem
 			
-			call AtPosicaometeor 	; Move o meteor
-			outchar r1, r2 				; Desenha o meteor
-			
-			call DelayjumpPlayer		; Todo ciclo principal do jogo, a funcao DelayjumpPlayer atrasa a execucao e le uma tecla do teclado (que e' 'w' ou nao)
-			call AtPlayerPos	; Todo ciclo principal do jogo, a funcao AtPlayerPos atualiza a posicao do boneco de acordo com a situacao
-			
-			push r3 			; Checa se pode pular (caso o personagem esteja no chao)
+			push r3                               ; Verifica se o personagem pode pular
 			loadn r3, #0 
 			cmp r5, r3
-				ceq jumpPlayer ; A funcao checa se o jogador mandou o personagem pular
+				ceq jumpPlayer                   ; Realiza o salto se necessário
 			pop r3
 				
-			
-		jmp GameLoop 	; Volta para o loop
+		jmp GameLoop                              ; Repete o ciclo principal
 	
+;======================================
+;			GAMEOVER
+;======================================
+GameOver:
 	
-	GameOver:
-	
-		call ApagaTela				;	Imprime a tela do fim do jogo
-		loadn r1, #tela2Linha0
-		loadn r2, #3584
+		call ApagaTela                            ; Limpa a tela para o fim de jogo
+		loadn r1, #tela2Linha0                    ; Carrega o endereço da tela de fim de jogo
+		loadn r2, #3584                           ; Define a cor
 		call ImprimeTela
 		
-		loadn r1, #tela4Linha0
-		loadn r2, #2304
+		loadn r1, #tela4Linha0                    ; Carrega a mensagem de fim de jogo
+		loadn r2, #2304                           ; Define a cor
 		call ImprimeTela2
 		
-		load r5, pontuacaoPlayer
+		load r5, pontuacaoPlayer                  ; Mostra a pontuação final
 		loadn r6, #865	
 		call PrintaNumero
-		call InputLetra
+		call InputLetra                           ; Aguardando entrada do jogador para reinício
 		
-		;if Letra == ' '		; Espera que a tecla 's' seja digitada para reiniciar o jogo
-		loadn r0, #'n'
+		loadn r0, #'n'                            ; Verifica se o jogador quer sair (tecla 'n')
 		load r1, Letra
 		cmp r0, r1
 		jeq fim_de_jogo
 		
-		loadn r0, #'s'
+		loadn r0, #'s'                            ; Verifica se o jogador quer reiniciar (tecla 's')
 		cmp r0, r1
 		jne GameOver
 		
-		call ApagaTela
-	
-		;pop r2
-		;pop r1
-		;pop r0
-
-		;pop r0	; Da um Pop a mais para acertar o ponteiro da pilha, pois nao vai dar o RTS !!
+		call ApagaTela                            ; Limpa a tela antes de reiniciar
 		jmp reset
 		
 fim_de_jogo:
-	call ApagaTela
+	call ApagaTela                                ; Limpa a tela e finaliza o programa
 	halt
 
-;########################################################################
-;#														  				#
-;#                  			SUBROTINAS						  		#
-;#														  				#
-;########################################################################
 
-;********************************************************
-;                   	Imprimestr
-;********************************************************
+;======================================
+;			DIGITAR LETRA
+;======================================
 
-Imprimestr:	;  Rotina de Impresao de Mensagens:    r0 = Posicao da tela que o primeiro caractere da mensagem sera' impresso;  r1 = endereco onde comeca a mensagem; r2 = cor da mensagem.   Obs: a mensagem sera' impressa ate' encontrar "/0"
-	push r0	; protege o r0 na pilha para preservar seu valor
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
+InputLetra:	; Aguarda a digitação de uma tecla e armazena na variável global "Letra".
+	push r0	; Salva r0 na pilha para preservar seu valor.
+	push r1	; Salva r1 na pilha para preservar seu valor.
+	loadn r1, #255	; Valor padrão caso nenhuma tecla seja pressionada.
 
-	
-	loadn r3, #'\0'	; Criterio de parada
+InputLetra_Loop:
+	inchar r0	; Lê o teclado, retorna 255 se nenhuma tecla for pressionada.
+	cmp r0, r1	; Compara r0 com 255.
+	jeq InputLetra_Loop	; Continua aguardando até que uma tecla válida seja pressionada.
 
-ImprimestrLoop:	
-	loadi r4, r1
-	cmp r4, r3
-	jeq ImprimestrSai
-	add r4, r2, r4
-	outchar r4, r0
-	inc r0
-	inc r1
-	jmp ImprimestrLoop
-	
-ImprimestrSai:	
-	pop r4	; Resgata os valores dos registradores utilizados na Subrotina da Pilha
-	pop r3
-	pop r2
-	pop r1
-	pop r0
-	rts
+	store Letra, r0	; Armazena a tecla digitada na variável global "Letra".
 
-;********************************************************
-;                  	     InputLetra
-;********************************************************
+	pop r1	; Recupera o valor original de r1.
+	pop r0	; Recupera o valor original de r0.
+	rts	; Retorna da subrotina.
 
-InputLetra:	; Espera que uma tecla seja digitada e salva na variavel global "Letra"
-	push r0
-	push r1
-	loadn r1, #255	; Se nao digitar nada vem 255
+;======================================
+;			APAGA TELA 
+;======================================
 
-   InputLetra_Loop:
-		inchar r0			; Le o teclado, se nada for digitado = 255
-		cmp r0, r1			;compara r0 com 255
-		jeq InputLetra_Loop	; Fica lendo ate' que digite uma tecla valida
-
-	store Letra, r0			; Salva a tecla na variavel global "Letra"
-
-	pop r1
-	pop r0
-	rts
-	
-;********************************************************
-;                       ApagaTela
-;********************************************************
 ApagaTela:
-	push r0
-	push r1
+	push r0	; Armazena r0 na pilha para manter seu valor.
+	push r1	; Armazena r1 na pilha para manter seu valor.
 	
-	loadn r0, #1200		; apaga as 1200 posicoes da Tela
-	loadn r1, #' '		; com "espaco"
+	loadn r0, #1200	; Configura o número total de posições a serem apagadas na tela.
+	loadn r1, #' '	; Configura o caractere "espaço" para apagar a tela.
+
+ApagaTela_Loop:
+	dec r0	; Decrementa a posição atual.
+	outchar r1, r0	; Substitui o caractere atual pelo espaço.
+	jnz ApagaTela_Loop	; Continua até apagar todas as posições.
+
+	pop r1	; Restaura o valor original de r1.
+	pop r0	; Restaura o valor original de r0.
+	rts	; Retorna da subrotina.
+
+;======================================
+;			IMPRIME TELA 1
+;======================================
+
+ImprimeTela:	; Subrotina para exibir um cenário na tela inteira. Parâmetros: r1 - endereço do início do cenário, r2 - cor do cenário.
+	push r0	; Protege r0 durante a execução.
+	push r1	; Protege r1 durante a execução.
+	push r2	; Protege r2 durante a execução.
+	push r3	; Protege r3 durante a execução.
+	push r4	; Protege r4 durante a execução.
+	push r5	; Protege r5 durante a execução.
+
+	loadn R0, #0	; Define a posição inicial na tela.
+	loadn R3, #40	; Incremento para pular uma linha na tela.
+	loadn R4, #41	; Incremento para avançar para a próxima linha na memória.
+	loadn R5, #1200	; Limite total da tela.
+
+ImprimeTela_Loop:
+	call ImprimeStr	; Exibe uma linha do cenário.
+	add r0, r0, r3	; Avança para a próxima linha na tela.
+	add r1, r1, r4	; Avança para a próxima linha na memória.
+	cmp r0, r5	; Verifica se atingiu o limite da tela.
+	jne ImprimeTela_Loop	; Continua se ainda houver linhas para exibir.
+
+	pop r5	; Recupera o valor original de r5.
+	pop r4	; Recupera o valor original de r4.
+	pop r3	; Recupera o valor original de r3.
+	pop r2	; Recupera o valor original de r2.
+	pop r1	; Recupera o valor original de r1.
+	pop r0	; Recupera o valor original de r0.
+	rts	; Retorna da subrotina.
+
+;======================================
+;			IMPRIME TELA 2
+;======================================
+
+ImprimeTela2:	; Similar ao "ImprimeTela", mas com um cenário adicional.
+	push r0	; Protege r0 durante a execução.
+	push r1	; Protege r1 durante a execução.
+	push r2	; Protege r2 durante a execução.
+	push r3	; Protege r3 durante a execução.
+	push r4	; Protege r4 durante a execução.
+	push r5	; Protege r5 durante a execução.
+	push r6	; Protege r6 durante a execução.
+
+	loadn R0, #0	; Configura a posição inicial na tela.
+	loadn R3, #40	; Incremento para pular uma linha na tela.
+	loadn R4, #41	; Incremento para avançar para a próxima linha na memória.
+	loadn R5, #1200	; Limite total da tela.
+	loadn R6, #tela0Linha0	; Configura o início do cenário adicional.
+
+ImprimeTela2_Loop:
+	call ImprimeStr2	; Exibe a linha do cenário adicional.
+	add r0, r0, r3	; Avança para a próxima linha na tela.
+	add r1, r1, r4	; Avança para a próxima linha na memória.
+	add r6, r6, r4	; Avança para a próxima linha do cenário adicional.
+	cmp r0, r5	; Verifica se atingiu o limite da tela.
+	jne ImprimeTela2_Loop	; Continua se ainda houver linhas para exibir.
+
+	pop r6	; Recupera o valor original de r6.
+	pop r5	; Recupera o valor original de r5.
+	pop r4	; Recupera o valor original de r4.
+	pop r3	; Recupera o valor original de r3.
+	pop r2	; Recupera o valor original de r2.
+	pop r1	; Recupera o valor original de r1.
+	pop r0	; Recupera o valor original de r0.
+	rts	; Retorna da subrotina.
 	
-	   ApagaTela_Loop:	;label for(r0=1200;r3>0;r3--)
-		dec r0
-		outchar r1, r0
-		jnz ApagaTela_Loop
- 
-	pop r1
-	pop r0
-	rts	
 
 
-;********************************************************
-;                       ImprimeTela
-;********************************************************	
+;======================================
+;			IMPRIME STRING 1
+;======================================
 
-ImprimeTela: 	;  Rotina de Impresao de Cenario na Tela Inteira
-				;  r1 = endereco onde comeca a primeira linha do Cenario
-				;  r2 = cor do Cenario para ser impresso
 
-	push r0	; protege o r3 na pilha para ser usado na subrotina
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	push r5	; protege o r4 na pilha para ser usado na subrotina
+ImprimeStr:	; Subrotina para exibir uma mensagem na tela. 
+            ; r0 = posição inicial na tela; r1 = endereço do texto; r2 = cor do texto.
+            ; A exibição para ao encontrar '\0'.
 
-	loadn R0, #0  	; posicao inicial tem que ser o comeco da tela!
-	loadn R3, #40  	; Incremento da posicao da tela!
-	loadn R4, #41  	; incremento do ponteiro das linhas da tela
-	loadn R5, #1200 ; Limite da tela!
-	
-   ImprimeTela_Loop:
-		call ImprimeStr
-		add r0, r0, r3  	; incrementaposicao para a segunda linha na tela -->  r0 = R0 + 40
-		add r1, r1, r4  	; incrementa o ponteiro para o comeco da proxima linha na memoria (40 + 1 porcausa do /0 !!) --> r1 = r1 + 41
-		cmp r0, r5			; Compara r0 com 1200
-		jne ImprimeTela_Loop	; Enquanto r0 < 1200
+	push r0	; Armazena r0 na pilha para preservá-lo
+	push r1	; Armazena r1 na pilha para preservá-lo
+	push r2	; Armazena r2 na pilha para preservá-lo
+	push r3	; Salva r3 na pilha para uso local
+	push r4	; Salva r4 na pilha para uso local
 
-	pop r5	; Resgata os valores dos registradores utilizados na Subrotina da Pilha
-	pop r4
+	loadn r3, #'\0'	; Define o caractere de parada (\0)
+
+ImprimeStr_Loop:
+	loadi r4, r1	; Carrega o caractere atual
+	cmp r4, r3	; Verifica se é o caractere de parada
+	jeq ImprimeStr_Sai
+	add r4, r2, r4	; Aplica a cor ao caractere
+	outchar r4, r0	; Exibe o caractere na posição atual
+	inc r0		; Move para a próxima posição na tela
+	inc r1		; Avança para o próximo caractere
+	jmp ImprimeStr_Loop
+
+ImprimeStr_Sai:
+	pop r4	; Restaura o valor original de r4
 	pop r3
 	pop r2
 	pop r1
 	pop r0
 	rts
-	
-	
-;********************************************************
-;                       IMPRIME TELA2
-;********************************************************	
 
-ImprimeTela2: 	;  Rotina de Impresao de Cenario na Tela Inteira
-		;  r1 = endereco onde comeca a primeira linha do Cenario
-		;  r2 = cor do Cenario para ser impresso
 
-	push r0	; protege o r3 na pilha para ser usado na subrotina
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	push r5	; protege o r5 na pilha para ser usado na subrotina
-	push r6	; protege o r6 na pilha para ser usado na subrotina
+;======================================
+;			IMPRIME STRING 2
+;======================================
 
-	loadn R0, #0  	; posicao inicial tem que ser o comeco da tela!
-	loadn R3, #40  	; Incremento da posicao da tela!
-	loadn R4, #41  	; incremento do ponteiro das linhas da tela
-	loadn R5, #1200 ; Limite da tela!
-	loadn R6, #tela0Linha0	; Endereco onde comeca a primeira linha do cenario!!
-	
-   ImprimeTela2_Loop:
-		call ImprimeStr2
-		add r0, r0, r3  	; incrementaposicao para a segunda linha na tela -->  r0 = R0 + 40
-		add r1, r1, r4  	; incrementa o ponteiro para o comeco da proxima linha na memoria (40 + 1 porcausa do /0 !!) --> r1 = r1 + 41
-		add r6, r6, r4  	; incrementa o ponteiro para o comeco da proxima linha na memoria (40 + 1 porcausa do /0 !!) --> r1 = r1 + 41
-		cmp r0, r5			; Compara r0 com 1200
-		jne ImprimeTela2_Loop	; Enquanto r0 < 1200
+ImprimeStr2:	; Subrotina para exibir uma mensagem na tela com suporte para cor e espaços. 
+                ; r0 = posição inicial na tela; r1 = endereço do texto; r2 = cor do texto. 
+                ; Exibição para ao encontrar '\0'.
 
-	pop r6	; Resgata os valores dos registradores utilizados na Subrotina da Pilha
+	push r0	; Armazena r0 na pilha para preservar seu valor
+	push r1	; Armazena r1 na pilha para preservar seu valor
+	push r2	; Armazena r2 na pilha para preservar seu valor
+	push r3	; Salva r3 na pilha para uso local
+	push r4	; Salva r4 na pilha para uso local
+	push r5	; Salva r5 na pilha para uso local
+	push r6	; Salva r6 na pilha para uso local
+
+	loadn r3, #'\0'	; Define o caractere de parada (\0)
+	loadn r5, #' '	; Define o espaço como referência
+
+ImprimeStr2_Loop:
+	loadi r4, r1	; Carrega o caractere atual
+	cmp r4, r3	; Verifica se é o caractere de parada
+	jeq ImprimeStr2_Sai
+	cmp r4, r5	; Verifica se é um espaço
+	jeq ImprimeStr2_Skip
+	add r4, r2, r4	; Adiciona cor ao caractere
+	outchar r4, r0	; Exibe o caractere na tela
+	storei r6, r4	; Salva o caractere exibido para referência futura
+
+ImprimeStr2_Skip:
+	inc r0		; Move para a próxima posição da tela
+	inc r1		; Avança para o próximo caractere na string
+	inc r6
+	jmp ImprimeStr2_Loop
+
+ImprimeStr2_Sai:
+	pop r6	; Recupera o valor original de r6
 	pop r5
 	pop r4
 	pop r3
@@ -333,202 +363,110 @@ ImprimeTela2: 	;  Rotina de Impresao de Cenario na Tela Inteira
 	pop r1
 	pop r0
 	rts
-				
-;---------------------
 
-;********************************************************
-;                   IMPRIME STRING2
-;********************************************************
-	
-ImprimeStr2:	;  Rotina de Impresao de Mensagens:    r0 = Posicao da tela que o primeiro caractere da mensagem sera' impresso;  r1 = endereco onde comeca a mensagem; r2 = cor da mensagem.   Obs: a mensagem sera' impressa ate' encontrar "/0"
-	push r0	; protege o r0 na pilha para preservar seu valor
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	push r5	; protege o r5 na pilha para ser usado na subrotina
-	push r6	; protege o r6 na pilha para ser usado na subrotina
-	
-	
-	loadn r3, #'\0'	; Criterio de parada
-	loadn r5, #' '	; Espaco em Branco
+;======================================
+;			ATUALIZA PLAYER POS
+;======================================
 
-   ImprimeStr2_Loop:	
-		loadi r4, r1
-		cmp r4, r3		; If (Char == \0)  vai Embora
-		jeq ImprimeStr2_Sai
-		cmp r4, r5		; If (Char == ' ')  vai Pula outchar do espaco para na apagar outros caracteres
-		jeq ImprimeStr2_Skip
-		add r4, r2, r4	; Soma a Cor
-		outchar r4, r0	; Imprime o caractere na tela
-   		storei r6, r4
-   ImprimeStr2_Skip:
-		inc r0			; Incrementa a posicao na tela
-		inc r1			; Incrementa o ponteiro da String
-		inc r6
-		jmp ImprimeStr2_Loop
-	
-   ImprimeStr2_Sai:	
-	pop r6	; Resgata os valores dos registradores utilizados na Subrotina da Pilha
-	pop r5
-	pop r4
-	pop r3
-	pop r2
-	pop r1
-	pop r0
-	rts
-	
-
-;------------------------
-
-;********************************************************
-;                   ImprimeStr
-;********************************************************
-	
-ImprimeStr:	;  Rotina de Impresao de Mensagens:    r0 = Posicao da tela que o primeiro caractere da mensagem sera' impresso;  r1 = endereco onde comeca a mensagem; r2 = cor da mensagem.   Obs: a mensagem sera' impressa ate' encontrar "/0"
-	push r0	; protege o r0 na pilha para preservar seu valor
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	
-	loadn r3, #'\0'	; Criterio de parada
-
-   ImprimeStr_Loop:	
-		loadi r4, r1
-		cmp r4, r3		; If (Char == \0)  vai Embora
-		jeq ImprimeStr_Sai
-		add r4, r2, r4	; Soma a Cor
-		outchar r4, r0	; Imprime o caractere na tela
-		inc r0			; Incrementa a posicao na tela
-		inc r1			; Incrementa o ponteiro da String
-		jmp ImprimeStr_Loop
-	
-   ImprimeStr_Sai:	
-	pop r4	; Resgata os valores dos registradores utilizados na Subrotina da Pilha
-	pop r3
-	pop r2
-	pop r1
-	pop r0
-	rts
-	
-;********************************************************
-;                   AtPlayerPos
-;********************************************************
-
-;	Funcao que atualiza a posicao do boneco na tela de acordo com a necessidade da situacao
-
-AtPlayerPos:
+AtPlayerPos:	; Atualiza a posição do player com base no ciclo do pulo.
 
 	push r0
-	
-	;if r5 = 1		; Caso o ciclo do pulo esteja em 1, 2, 3 ou 4, o boneco sobe
+
+	; Verifica se o ciclo atual está nos valores 1 a 4 (subida)
 	loadn r0, #1
 	cmp r5, r0
 		ceq Sobe
 
-	;if r5 = 2
 	loadn r0, #2
 	cmp r5, r0
 		ceq Sobe
-		
-	;if r5 = 3
+
 	loadn r0, #3
 	cmp r5, r0
 		ceq Sobe
-		
-	;if r5 = 4
+
 	loadn r0, #4
 	cmp r5, r0
 		ceq Sobe
-	
-	;if r5 = 5		; Caso o ciclo do pulo esteja em 5, 6, 7 ou 8, o boneco desce
+
+	; Verifica se o ciclo atual está nos valores 5 a 8 (descida)
 	loadn r0, #5
 	cmp r5, r0
 		ceq Desce
-		
-	;if r5 = 6
+
 	loadn r0, #6
 	cmp r5, r0
 		ceq Desce
-		
-	;if r5 = 7
+
 	loadn r0, #7
 	cmp r5, r0
 		ceq Desce
-		
-	;if r5 = 8
+
 	loadn r0, #8
 	cmp r5, r0
 		ceq Desce
-		
-	;if r5 != 0
-	loadn r0, #0		; Caso o boneco estaja no chao (ciclo = 0), o ciclo nao deve ser alterado aqui
+
+	; Verifica se o player está no chão (ciclo = 0)
+	loadn r0, #0
 	cmp r5, r0
-		cne IncrementaCiclo	; Caso esteja no ar, o ciclo deve continuar sendo incrementado
-		
-	loadn r0, #9	; Ate que o ciclo chegue em 9, entao se torna 0 novamente (boneco esta no chao novamente)
+		cne IncrementaCiclo
+
+	; Reinicia o ciclo quando alcança 9
+	loadn r0, #9
 	cmp r5, r0
 		ceq ResetaCiclo
-				
-		
+
 	pop r0
 	rts
-	
-;********************************************************
-;               ATUALIZA POSICAO DO meteor
-;********************************************************
 
-;	Funcao que atualiza a posicao do meteor na tela de acordo com a necessidade da situacao
+;======================================
+;			ATUALIZA POS METEOR
+;======================================
 
-AtPosicaometeor:
-	
+AtPosicaometeor:	; Atualiza a posição do meteor na tela.
+
 	push r0
-	loadn r0 , #' '
-	
-	outchar r0, r2
-	
-	dec r2
+	loadn r0, #' '	; Define um espaço para apagar o meteor anterior
+	outchar r0, r2	; Exibe o espaço na posição atual
+	dec r2		; Move o meteor uma posição para a esquerda
 
-	;if posicao do meteor = 480 (fim da tela para a esquerda)
+	; Reseta a posição do meteor quando alcança o limite da tela
 	loadn r0, #480
 	cmp r2, r0
 		ceq MeteorReset
-		
+
 	loadn r0, #440
 	cmp r2, r0
 		ceq MeteorReset
-		
+
 	loadn r0, #400
 	cmp r2, r0
 		ceq MeteorReset
-		
+
 	pop r0
 	rts
 
-;********************************************************
-;                       MeteorReset
-;********************************************************
+;======================================
+;			RESETA METEOR
+;======================================
 
-; Funcao que reseta a posicao do meteor
+MeteorReset:	; Reseta a posição do meteor para o valor padrão.
 
-MeteorReset:
 	push r0
 	push r1
 	push r3
-	
-	loadn r2, #639	; Posicao (padrao do meteor)
-	
-	call GeraPosicao	; Gera a nova  posicao para o meteor
-	
-	loadn r1, #1		;  Caso 1
-	cmp r3,r1
+
+	loadn r2, #639	; Define a posição padrão inicial do meteor
+	call GeraPosicao	; Gera uma nova posição aleatória para o meteor
+
+	loadn r1, #1	; Ajusta a posição para o caso 1
+	cmp r3, r1
 	ceq AlteraPos1
-	
-	loadn r1, #2		; Caso 2
-	cmp r3,r1
+
+	loadn r1, #2	; Ajusta a posição para o caso 2
+	cmp r3, r1
 	ceq AlteraPos2
-	
+
 	pop r3
 	pop r1
 	pop r0
@@ -536,7 +474,7 @@ MeteorReset:
 
 	
 ;********************************************************
-;                       GeraPosicao
+;                       GeraPosicao CONTINUAR REFATORAÇÃO A PARTIR DAQUI
 ;********************************************************
 
 ; Funcao que gera uma posicao aleatoria para o meteor
