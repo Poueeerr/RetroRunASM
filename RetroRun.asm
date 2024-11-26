@@ -472,85 +472,65 @@ MeteorReset:	; Reseta a posição do meteor para o valor padrão.
 	pop r0
 	rts
 
-	
-;********************************************************
-;                       GeraPosicao CONTINUAR REFATORAÇÃO A PARTIR DAQUI
-;********************************************************
 
-; Funcao que gera uma posicao aleatoria para o meteor
+;======================================
+;			GERA POS
+;======================================
 
 GeraPosicao :
-	push r0
-	push r1
-	
-
-						; sorteia nr. randomico entre 0 - 7
-	loadn r0, #Rand 	; declara ponteiro para tabela rand na memoria!
-	load r1, IncRand	; Pega Incremento da tabela Rand
-	add r0, r0, r1		; Soma Incremento ao inicio da tabela Rand
-						; R2 = Rand + IncRand
-	loadi r3, r0 		; busca nr. randomico da memoria em R3
-						; R3 = Rand(IncRand)
-						
-	inc r1				; Incremento ++
-	loadn r0, #30
-	cmp r1, r0			; Compara com o Final da Tabela e re-estarta em 0
-	jne ResetaVetor
-		loadn r1, #0		; re-estarta a Tabela Rand em 0
+    push r0
+    push r1
+    
+    ; Sorteia número aleatório entre 0 e 7
+    loadn r0, #Rand      ; Carrega o endereço da tabela Rand na memória
+    load r1, IncRand     ; Carrega o incremento atual da tabela Rand
+    add r0, r0, r1       ; Soma o incremento ao início da tabela Rand
+                         ; r0 agora aponta para a posição desejada na tabela Rand
+    loadi r3, r0         ; Carrega o número aleatório da memória em r3
+                         ; r3 contém o valor Rand(IncRand)
+                         
+    inc r1               ; Incrementa o valor do incremento
+    loadn r0, #30
+    cmp r1, r0           ; Compara o incremento com o tamanho da tabela
+    jne ResetaVetor      ; Se o incremento ainda está dentro do limite, pula a próxima instrução
+        loadn r1, #0     ; Reinicia o incremento para 0 se atingir o final da tabela
   ResetaVetor:
-	store IncRand, r1	; Salva incremento ++
-	
-	
-	pop r1
-	pop r0
-	rts
+    store IncRand, r1    ; Salva o incremento atualizado
+    
+    pop r1
+    pop r0
+    rts                  ; Retorna da função
 
-;********************************************************
-;                       ResetaAleatorio
-;********************************************************
+ResetaAleatorio:
+    push r2
+    loadn r2, #28        ; Define um valor base (28)
+    sub r1, r2, r2       ; Reseta r1 com base no valor definido
+    pop r2
+    rts                  ; Retorna da função
 
-; Funcao que reseta a semente para a funcao de geracao aleatoria
 
-ResetaAleatorio:	
-		
-		push r2
-		loadn r2,#28
-		
-		sub r1,r2,r2 
-		
-		pop r2
-		rts
-
-;********************************************************
-;     				  AlteraPos1
-;********************************************************
-
-; Caso 1 da posicao do meteor
+;======================================
+;			POS 1 ALTERA
+;======================================
 
 AlteraPos1:
-		push r1
-		
-		loadn r1,#40
-		sub r2,r2,r1
-		
+    push r1
+    loadn r1, #40        ; Define um deslocamento de 40
+    sub r2, r2, r1       ; Altera a posição usando o deslocamento
+    pop r1
+    rts                  ; Retorna da função
 
-		pop r1
-		rts
-	
-;********************************************************
-;     				  AlteraPos2
-;********************************************************
 
-; Caso 2 da posicao do meteor
+;======================================
+;			POS 2 ALTERA
+;======================================
 
 AlteraPos2:
-		push r1
-		
-		loadn r1,#80
-		sub r2,r2,r1	
-		
-		pop r1
-		rts
+    push r1
+    loadn r1, #80        ; Define um deslocamento de 80
+    sub r2, r2, r1       ; Altera a posição usando o deslocamento
+    pop r1
+    rts                  ; Retorna da função
 
 ;********************************************************
 ;                     jumpPlayer
