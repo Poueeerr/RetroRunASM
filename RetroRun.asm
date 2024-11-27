@@ -9,7 +9,7 @@ jmp main                                            ; Salta para a função prin
 
 Letra: var #1                                        ; Variável para armazenar a entrada do jogador
 
-scoreAtual : string "SCORE: "                        ; Texto inicial do placar
+scoreAtual : string "PLACAR: "                        ; Texto inicial do placar
 meteor: string "o"                                   ; Representação gráfica do meteoro
 player: string "-"                                   ; Representação gráfica do personagem
 posPlayer: var #610                                  ; Posição inicial do personagem
